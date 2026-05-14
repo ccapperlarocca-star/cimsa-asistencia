@@ -9,12 +9,30 @@ const BRAND = {
   navyLight: "#E8EDF8",
   tealLight: "#E0F7F3",
 };
-const initialRecords = [
-  { id: 1, userId: 2, name: "Juan López", type: "entrada", date: "2025-05-14", time: "08:02", lat: 25.7907, lng: -100.3061, address: "Escobedo, NL" },
-  { id: 2, userId: 3, name: "María García", type: "entrada", date: "2025-05-14", time: "08:15", lat: 25.7907, lng: -100.3061, address: "Escobedo, NL" },
-  { id: 3, userId: 2, name: "Juan López", type: "salida", date: "2025-05-14", time: "17:01", lat: 25.7907, lng: -100.3061, address: "Escobedo, NL" },
-];
+const loadRecords = async () => {
 
+  const { data, error } = await supabase
+    .from("registros")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data.map(item => ({
+    id: item.id,
+    userId: item.userid,
+    name: item.nombre,
+    type: item.tipo,
+    date: item.fecha,
+    time: item.hora,
+    lat: item.lat,
+    lng: item.lng,
+    address: item.direccion
+  }));
+};
 const Logo = ({ size = 28 }) => (
   <svg width={size * 3.2} height={size} viewBox="0 0 96 30" fill="none" xmlns="http://www.w3.org/2000/svg">
     <text x="0" y="22" fontFamily="sans-serif" fontWeight="700" fontSize="13" fill={BRAND.navy}>CIMSA</text>
@@ -366,7 +384,12 @@ function AdminView({ records, onLogout, onAddUser, onToggleUser, allUsers }) {
 }
 
 export default function Page() {
-  useEffect(() => {
+ useEffect(() => {
+  const fetchRecords = async () => {
+    const loadedRecords = await loadRecords();
+    setRecords(loadedRecords);
+  };
+  fetchRecords();
   loadUsers();
 }, []);
 
@@ -380,19 +403,40 @@ async function loadUsers() {
   }
 }
   const [currentUser, setCurrentUser] = useState(null);
-  const [records, setRecords] = useState(initialRecords);
+  const [records, setRecords] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [nextId, setNextId] = useState(initialRecords.length + 1);
   const [nextUserId, setNextUserId] = useState(1);
 
-  const handleRegister = ({ userId, name, type, lat, lng, address }) => {
-    const now = new Date();
-    const date = now.toISOString().split("T")[0];
-    const time = now.toTimeString().slice(0, 5);
-    setRecords(prev => [...prev, { id: nextId, userId, name, type, date, time, lat, lng, address }]);
-    setNextId(n => n + 1);
-  };
+const handleRegister = async ({ userId, name, type, lat, lng, address }) => {
 
+  const now = new Date();
+
+  const fecha = now.toISOString().split("T")[0];
+  const hora = now.toTimeString().slice(0,5);
+
+  const { data, error } = await supabase
+    .from("registros")
+    .insert([
+      {
+        userid: userId,
+        nombre: name,
+        tipo: type,
+        fecha,
+        hora,
+        lat,
+        lng,
+        direccion: address
+      }
+    ]);
+
+  if (error) {
+    console.error(error);
+    alert("Error guardando registro");
+    return;
+  }
+
+  loadRecords();
+};
   const handleAddUser = ({ username, password, name }) => {
     setAllUsers(prev => [...prev, { id: nextUserId, username, password, role: "worker", name, active: true }]);
     setNextUserId(n => n + 1);
