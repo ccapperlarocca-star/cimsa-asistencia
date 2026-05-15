@@ -364,5 +364,14 @@ export default function Page() {
 
   if (!currentUser) return <LoginView onLogin={setCurrentUser} />;
   if (currentUser.role === "worker") return <WorkerView user={currentUser} records={records} onRegister={handleRegister} onLogout={() => setCurrentUser(null)} />;
-  return <AdminView records={records} allUsers={allUsers} onLogout={() => setCurrentUser(null)} onAddUser={handleAddUser} onToggleUser={handleToggleUser} />;
+  return (
+  <AdminView
+    records={records}
+    allUsers={allUsers}
+    onLogout={() => setCurrentUser(null)}
+    onAddUser={handleAddUser}
+    onToggleUser={handleToggleUser}
+    onDeleteUser={handleDeleteUser}
+  />
+);
 }
