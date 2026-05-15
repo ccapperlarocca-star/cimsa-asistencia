@@ -552,7 +552,8 @@ export default function Page() {
 
       setRecords(loadedRecords);
 
-      await loadUsers();
+      const { data } = await supabase.from("usuarios").select("*");
+if (data) setAllUsers(data);
 
     };
 
@@ -616,11 +617,19 @@ export default function Page() {
 
   };
 
- const handleAddUser = async ({
-  username,
-  password,
-  name
-}) => {
+ const handleAddUser = async ({ username, password, name }) => {
+    const { error } = await supabase
+      .from("usuarios")
+      .insert([{ username, password, role: "worker", name, active: true }]);
+
+    if (error) {
+      console.error(error);
+      alert("Error creando usuario");
+      return;
+    }
+    const { data } = await supabase.from("usuarios").select("*");
+    if (data) setAllUsers(data);
+ }
 
   console.log("Intentando guardar usuario...");
 
@@ -648,7 +657,8 @@ export default function Page() {
 
   alert("Usuario creado correctamente");
 
-  await loadUsers();
+ const { data } = await supabase.from("usuarios").select("*");
+if (data) setAllUsers(data);
 
 };
 
@@ -658,7 +668,8 @@ export default function Page() {
       return;
     }
 
-    await loadUsers();
+    const { data } = await supabase.from("usuarios").select("*");
+if (data) setAllUsers(data);
 
   };
 
@@ -681,7 +692,9 @@ export default function Page() {
       return;
     }
 
-    await loadUsers();
+  const { data } = await supabase.from("usuarios").select("*");
+if (data) setAllUsers(data);
+
 
   };
 
